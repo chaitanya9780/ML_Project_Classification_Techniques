@@ -1,0 +1,170 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Apr  3 19:50:57 2020
+
+@author: ADMIN
+"""
+
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+import seaborn as sea
+
+data=pd.read_csv("C:\\Users\\ADMIN\\Desktop\\ML PROJECT\\project_data.csv")
+print(data)
+
+print('Rows :'+str(data.shape[0]))
+print('Columns:'+str(data.shape[1]))
+
+data=data.drop(columns=['Termid','CoureType','Regd No','MHRDName','CA_1','CA_2','CA_3','CA_4','ProgramType','Direction','ScholarType','Height','Weight','Medium'])
+
+print(data.shape)
+
+print(data.describe())
+
+map1={'O':10,'A+':9,'A':8,'B+':7,'B':6,'C':5,'D':4,'E':3,'F':2}
+data['Grade']=data['Grade'].map(map1)
+print(data['Grade'])
+
+from sklearn.preprocessing import LabelEncoder
+le=LabelEncoder()
+data['Course']=le.fit_transform(data['Course'].values)
+data['Gender']=le.fit_transform(data['Gender'].values)
+
+
+print(data.isnull().sum())
+
+print(data.info())
+
+print(data.columns)
+
+from sklearn.preprocessing import Imputer
+im=Imputer(missing_values=np.nan,strategy='most_frequent',axis=0)
+data['MTT_50']=im.fit_transform(data[['MTT_50']].values)
+data['ETT_100']=im.fit_transform(data[['ETT_100']].values)
+data['ETP_100']=im.fit_transform(data[['ETP_100']].values)
+data['Course_Att']=im.fit_transform(data[['Course_Att']].values)
+
+print(data.isnull().sum())
+print(data.head())
+
+print(data)
+
+data['Gender'].value_counts().plot(kind='barh')
+plt.xlabel("No of students")
+plt.ylabel("Male and Females")
+plt.show()
+data['Grade'].value_counts().plot(kind='barh')
+plt.xlabel("No of Grades")
+plt.ylabel("Grade Types")
+plt.show()
+sea.countplot(data.Grade,hue=data['Gender'])
+plt.show()
+data['MTT_50'].value_counts().plot(kind='hist')
+plt.show()
+data['ETT_100'].value_counts().plot(kind='hist')
+plt.show()
+data['ETP_100'].value_counts().plot(kind='hist')
+plt.show()
+data['CA_100'].value_counts().plot(kind='hist')
+plt.show()
+
+
+#plt.bar(x = 'Regd No', y = 'Grade')
+#plt.show()
+#plt.bar(x = 'Regd No', y = ['MTT_50','ETT_100','ETP_100','CA_100'])
+#plt.bar(x = 'Regd No', y = 'Course_Att')
+'''
+# to create a new column named catogory based on the grades given in the dataset
+new_list=[]
+Simple=['O','A','A+']
+Medium=['B+','B','C','D']
+Tough=['E','F','R','M','I']
+for index,row in data.iterrows():
+    if(row['Grade']in Simple):
+        new_list.append('Simple')
+    elif(row['Grade']in Medium):
+        new_list.append('Medium')
+    else:
+        new_list.append('Tough')
+        
+print(new_list)
+data['Category']=new_list
+print(data.columns)
+'''
+
+target=data['Grade']
+print(target)
+features=data.drop('Grade',axis=1)
+features=data.drop('Gender',axis=1)
+print(features)
+
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test=train_test_split(features,target,test_size=0.3,random_state=0)
+from sklearn.preprocessing import StandardScaler
+sc=StandardScaler()
+data=sc.fit_transform(data)
+
+from sklearn.svm import SVC
+svc=SVC(C=10,kernel='linear')
+print(svc)
+svc.fit(x_train,y_train)
+y_pred=svc.predict(x_test)
+
+from sklearn.metrics import accuracy_score
+print('Accuracy Score :')
+print(accuracy_score(y_pred,y_test))
+
+
+from sklearn.neighbors import KNeighborsClassifier
+knn=KNeighborsClassifier(n_neighbors=3)
+knn.fit(x_train,y_train)
+y_pred=knn.predict(x_test)
+print("Accuracy score :")
+print(accuracy_score(y_test,y_pred))
+
+from sklearn.naive_bayes import GaussianNB
+gn=GaussianNB()
+gn.fit(x_train,y_train)
+y_pred=gn.predict(x_test)
+print("Accuracy Score :")
+print(accuracy_score(y_pred,y_test))
+
+from sklearn.tree import DecisionTreeClassifier
+dt=DecisionTreeClassifier(criterion='gini')
+dt.fit(x_train,y_train)
+y_pred=dt.predict(x_test)
+print("Accuracy Score :")
+print(accuracy_score(y_pred,y_test))
+# comparing actual response values (y_test) with predicted response values (y_pred)
+
+from sklearn.ensemble import RandomForestClassifier
+rc=RandomForestClassifier(n_estimators=100,criterion='gini',max_features=6)
+print(rc)
+rc.fit(x_train,y_train)
+y_pred=rc.predict(x_test)
+print("Accuracy Score :")
+print(accuracy_score(y_test,y_pred))
+
+
+print("Calculating the statistics of dataset provided in order to define the difficulty level of a particular course ..")
+max_grade = np.max(target)
+min_grade = np.min(target)
+mean_grade= np.mean(target)
+print("Maximum grade: {}".format(max_grade))
+print("Minimum grade: {}".format(min_grade)) 
+print("Mean grade: {}".format(mean_grade))
+difference=(mean_grade)*10
+
+
+print("Difficulty level of this course (B-Tech Master of Technology in BioTechnology(Integrated)) whose accuracy value is {} is :".format(difference))
+difficulty_rate=['Easy','Medium','Hard']
+if difference<50:
+    difference=difficulty_rate[0]
+elif difference>50 and difference<75:
+    difference=difficulty_rate[1]
+else :
+    difference=difficulty_rate[2]
+
+print(difference)
+    
